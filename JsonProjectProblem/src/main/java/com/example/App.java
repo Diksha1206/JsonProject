@@ -1,6 +1,11 @@
 package com.example;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -17,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import com.example.Invitation;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.xml.crypto.Data;
@@ -275,22 +281,52 @@ public class App
             listInvitation.add(invitation);
             listInvitation.add(invitation1);
 
-            
-            ObjectMapper mapper = new ObjectMapper();
-            String json= new String();
+         
+          
 
+            ObjectMapper mapper = new ObjectMapper();
+            JSONParser jsonParser = new JSONParser();
+            String json= new String();
             JSONArray jsonArrayResult = new JSONArray();
             for(int i=0; i<listInvitation.size(); i++) {
-                json += mapper.writeValueAsString(listInvitation.get(i));                
-                //jsonArrayResult.add(mapper.writeValueAsString(listInvitation.get(i));                )
+                json = mapper.writeValueAsString(listInvitation.get(i));
+                //System.out.println(json);
+                jsonArrayResult.add(jsonParser.parse(json));
             }
-            jsonArrayResult.add(json);
-            System.out.println(jsonArrayResult);
 
-           // System.out.println(json);
-    
+            
+            //System.out.println("The result of json Array is  "+jsonArrayResult);
+            String jsonInputString = jsonArrayResult.toJSONString();
+            //System.out.println(jsonInputString);
 
-           // System.out.println(jsonObject.toString());
+
+
+            // Send data to server using POST
+
+            URL url = new URL ("https://reqres.in/api/users");
+            HttpURLConnection con = (HttpURLConnection)url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json; utf-8");
+            con.setRequestProperty("Accept", "application/json");
+            con.setDoOutput(true);
+
+            try(OutputStream os = con.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);			
+            }
+
+
+
+           
+
+
+
+
+
+
+
+                   
+           
             JSONArray jsonArray = (JSONArray) jsonObject.get("partners");            
             //System.out.println("The length is "+ length);
             List<Partner> listOfPartners = createPartnerList(jsonArray);            
@@ -349,7 +385,7 @@ public class App
             countryFrequqency.put(country, maxDateFrequency);
             maxCount = 0;
         }
-        System.out.println(countryFrequqency);
+       // System.out.println(countryFrequqency);
         return countryFrequqency;
     }
 
